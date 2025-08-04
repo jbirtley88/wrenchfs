@@ -12,39 +12,14 @@ To access the *secret* files, the password is `supersecret`.
 The idea being that, when being hit with the wrench, you can hand over a password that works whilst keeping your supersecret files super secret.
 
 # Step 1: Installing FUSE
-## Docker
-First, spin up an Ubuntu docker container:
-```sh
-    $ docker rmi -f $( docker images | grep -v REPOSITORY | awk ' { printf "%s:%s", $1, $2 } ' ) 2>/dev/null
-    $ docker build -f Dockerfile -t fuse:latest .
-    $ docker run -it fuse:latest 
-    root@a16ef8005eca:/#
-```
-You now have a root shell on an Ubuntu box.  You don't have to be `root` to run FUSE (it all runs in userspace, and that is the whole point of it) but, so we're going to do all our work as the `ubuntu` user (a non-privileged account).
-
-First thing we will do is set the password for the `ubuntu` user to be `password`:
-```sh
-    root# passwd ubuntu
-    New password:            # password <ENTER>
-    Retype new password:     # password <ENTER>
-    passwd: password updated successfully
-```
-Now we switch to the ubuntu user:
-```sh
-    root# su - ubuntu
-    ubuntu$ id
-    uid=1000(ubuntu) gid=1000(ubuntu) ...
-```
-
 ## Linux
 Installing on Linux is a little more straightforward:
 ```sh
     $ sudo apt update
     $ sudo apt install fuse libfuse-dev
 ```
-Then, follow the docker steps above, starting at *Make sure FUSE is configured ...*
 
-You're now ready to run your first filesystem and, like all great engineering tutorials, this will be a *Hello, World!*
+(Docker is a **TODO**, mainly because you can't install kernel modules into docker containers so it needs to be installed on the host)
 
 # Step 2: Configuring FUSE
 Make sure that FUSE is configured correctly, by uncommenting the `user_allow_other` in `/etc/fuse.conf`:
@@ -74,19 +49,23 @@ $ pip3 install -r requirements.txt
     Installing collected packages: fusepy
     Successfully installed fusepy-3.0.1
 ```
+You're now ready to run your first filesystem and, like all great engineering tutorials, this will be a *Hello, World!*.
+
+First, though, just take a moment to get your head round what we're actually doing when we run FUSE:
 
 # FUSE From 10,000 Feet
 ```
 +-------+      +-----+     +------+      +--------------+    +-------------------+     
-| ls -l |      | VFS |     | FUSE |      | your_fs.py |    | YourFS.statfs() |
+| ls -l |      | VFS |     | FUSE |      |  your_fs.py  |    |  YourFS.statfs()  |
 +---+---+      +--+--+     +---+--+      +-------+------+    +----------+--------+
     |             |            |                 |                      |
     +------------>+            |                 |                      |
     |             +----------->+                 |                      |
-    |             |            +---------------->+                      |
-    |             |            |                 +--------------------->+ Your implementation in code
-    |             |            |                 +<---------------------+
-    |             |            <-----------------+
+    |                          +---------------->+                      |
+    |                                            +--------------------->+ Your implementation in code
+    |                                                                   |
+    |                                            +<---------------------+
+    |                          <-----------------+   list_of_files['.', '..', 'hello.txt'. ]
     |             +<-----------+
     +<------------+
 ```
@@ -94,7 +73,7 @@ Your `ls -l` goes through the kernel VFS in the normal way - mapping the underly
 
 In our case, the kernel handler is `FUSE` (*Filesystem in USer spacE*).
 
-`FUSE` then, via the `your_fs.py`, invokes the `statfs()` function in your code.
+`FUSE` then, via `your_fs.py`, invokes the `statfs()` function in your code.
 
 You are now on the end of a `stat(2)` request, and the `ls -l` command is waiting on your code to return the result.
 
