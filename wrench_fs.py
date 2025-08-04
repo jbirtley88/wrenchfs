@@ -52,6 +52,7 @@ class WrenchFS(LoggingMixIn, Operations):
         self.rwlock = Lock()
         print(f'File system mounted at: {mount}')
 
+    # Wrap calls to the original functions with our self.root prepended
     def __call__(self, op, path, *args):
         return super(WrenchFS, self).__call__(op, self.root + path, *args)
 

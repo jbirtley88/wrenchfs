@@ -300,6 +300,10 @@ Basically, we just set `self.root` depending on which password was used.
 
 The rest of the class simply delegates all operations to the underlying real directory on disk (known as a *passthrough* implementation in FUSE) by prepending the `self.root`:
 ```py
+    # Wrap calls to the original functions with our self.root prepended
+    def __call__(self, op, path, *args):
+        return super(WrenchFS, self).__call__(op, self.root + path, *args)
+        
     def read(self, path, size, offset, fh):
         '''
         Read data from a file.
@@ -321,4 +325,3 @@ When you consider (and truly internalise) that FUSE allows your client code to i
 - mount .zip or .tar files as a filesystem
 - mount an email account as a filesystem
 
-# Finally, `WrenchFS`
