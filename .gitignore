@@ -208,4 +208,7 @@ __marimo__/
 
 .vscode
 __*
+.DS_Store
+*.swp
+.*
 

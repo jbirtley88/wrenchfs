@@ -244,4 +244,8 @@ if __name__ == '__main__':
     # Set thie to 'DEBUG' for the gory details
     logging.basicConfig(level=logging.INFO)
     fuse = FUSE(
-        WrenchFS(password), args.mount, foreground=True, allow_other=True)
+        WrenchFS(password=password, mount=args.mount),
+        args.mount,
+        foreground=True,
+        allow_other=True,
+    )
